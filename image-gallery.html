@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Image Gallery</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Global Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'poppins', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        header{
+            background-color:#112e42;
+            
+        }
+
+        body {
+            background-color: #081b29;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        
+        /* Filter Buttons */
+        .filter-buttons {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            border: none;
+            outline: none;
+            padding: 10px 20px;
+            margin: 0 5px;
+            background-color: #ddd;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn.active, .btn:hover {
+            background-color: #2c3e50;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1{
+            color: #00ffee;
+        }
+
+
+
+        /* Gallery Grid Styles */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-gap: 20px;
+        }
+        
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+        
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+        
+        .image-description {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+            color: white;
+            padding: 20px 10px 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .gallery-item:hover .image-description {
+            opacity: 1;
+        }
+        
+        /* Lightbox Styles */
+        .lightbox {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .lightbox.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .lightbox-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+        }
+        
+        .lightbox-img {
+            max-width: 100%;
+            max-height: 80vh;
+            display: block;
+            border: 3px solid white;
+            border-radius: 5px;
+        }
+        
+        .lightbox-description {
+            color: white;
+            text-align: center;
+            margin-top: 15px;
+            padding: 0 20px;
+        }
+        
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 30px;
+            color: white;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            transform: translateY(-50%);
+        }
+        
+        .lightbox-nav button {
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            font-size: 30px;
+            padding: 15px;
+            cursor: pointer;
+            margin: 0 20px;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .lightbox-nav button:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+            
+            .lightbox-img {
+                max-height: 70vh;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                grid-gap: 10px;
+            }
+            
+            .lightbox-img {
+                max-height: 60vh;
+            }
+            
+            .lightbox-nav button {
+                margin: 0 10px;
+                padding: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen">
+        <!-- header -->
+        <header class="sticky top-0 z-50">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <a href="index.html" class="text-white text-2xl font-bold">DesignPortfolio</a>
+                    <nav class="hidden md:flex space-x-8">
+                        <a href="index.html" class="text-white hover:text-indigo-600 transition">Home</a>
+                        <a href="image-gallery.html" class="text-white hover:text-indigo-600 transition">Projects</a>
+                        <a href="" class="text-white hover:text-indigo-600 transition">About</a>
+                        <a href="#" class="text-white hover:text-indigo-600 transition">Contact</a>
+                    </nav>
+                    <button class="md:hidden text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- projects section -->
+        <section class="container mx-auto px-6 py-12">
+                <div class="text-center mb-12">
+                    <h1 class="text-4xl md:text-5xl font-bold mb-4">My Creative Works</h1>
+                    <p class="text-xl text-white max-w-2xl mx-auto">Browse through my collection of carefully crafted designs made for my clients.</p>
+                </div>
+            
+            <!-- filter buttons -->
+            <div class="flex justify-center mb-12">
+                <div class="filter-buttons inline-flex flex-wrap justify-center gap-3 max-w-10xl">
+                    <button class="btn active px-4 py-2 rounded-full bg-indigo-600 text-white" data-filter="all">All</button>
+                    <button class="btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-300" data-filter="logo">Logo Design</button>
+                    <button class="btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-300" data-filter="flyer">Flyers Design</button>
+                    <button class="btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-300" data-filter="smd">Social Media Designs</button>
+                    <!-- <button class="btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-300" data-filter="photo-manipulation">Photo Manipulations</button> -->
+                    <button class="btn px-4 py-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-300" data-filter="typography">Typography & Mockups</button>
+                </div>
+            </div>
+
+            <!-- blessed Tech -->
+            <div class="text-center mb-10">
+                    <h1 class="text-xl md:text-3xl font-bold mb-1">Blessed Tech</h1>
+                    <p class="text-l text-white max-w-2xl mx-auto">Blessed Tech is an online graphic design brand that helps individuals and businesses create eye-catching designs. From logos to social media posts and branding, They bring your ideas to life with creativity and style.</p>
+            </div>
+            
+            <!-- Galler: Blessed Tech -->
+            <div class="gallery mb-5" id="gallery">
+                <!-- Portrait Images -->
+                <div class="gallery-item" data-category="logo">
+                    <img src="/DESIGNS/BLESSED LOGO.jpg" alt="blessed tech logo">
+                    <div class="image-description">BlessedTech's Logo and the brand color, Green!</div>
+                </div>
+                
+                <!-- Landscape Images -->
+                <div class="gallery-item" data-category="flyer">
+                    <img src="/DESIGNS/BRAND-IDENTITY.jpg" alt="Brand Identity Flyer">
+                    <div class="image-description">BlessedTech's Flyer Design</div>
+                </div>
+                
+                <!-- Square Images -->
+                <div class="gallery-item" data-category="smd">
+                    <img src="/DESIGNS/GROW-YOUR-BRAND.jpg" alt="social media design">
+                    <div class="image-description">BlessedTech's Social Media Design</div>
+                </div>
+
+                <div class="gallery-item" data-category="smd">
+                    <img src="/DESIGNS/NEW MONTH BLESSED.jpg" alt="social media design">
+                    <div class="image-description">BlessedTech's New month Design</div>
+                </div>
+                
+                <div class="gallery-item" data-category="typography">
+                    <img src="/DESIGNS/TYPOGRAPHY.jpg" alt="Blessed Logo Typography">
+                    <div class="image-description">BlessedTech's Logo Typography</div>
+                </div>
+                
+
+                <div class="gallery-item" data-category="smd">
+                    <img src="/DESIGNS/BLESSED TECH FATHER'S DAY.jpg" alt="social media design">
+                    <div class="image-description">BlessedTech's Father's Day design</div>
+                </div>
+                
+                
+                <!-- <div class="gallery-item" data-category="nature">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/239b9141-e5e1-4516-8be6-c52092335655.png" alt="Ocean waves crashing">
+                    <div class="image-description">Powerful ocean waves in stormy weather</div>
+                </div>
+                
+                <div class="gallery-item" data-category="nature">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/c852e639-f8e2-4fd5-b457-40bb88659252.png" alt="Vertical forest landscape">
+                    <div class="image-description">Lush green forest vertical composition</div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/80e4543f-96dc-4be8-bf43-22bd0d6ebdfb.png" alt="Desert landscape wide">
+                    <div class="image-description">Expansive desert dunes at midday</div>
+                </div> -->
+            </div>
+            <!-- Instagram: Blessed Tech -->
+            <div class= "text-center mb-20">
+                    <h2 class="text-white">Check out Their Instagram:</h2>
+                    <a href="www.instagram.com/blessed_tech.inc/"><button class="text-black mt-2 px-4 py-2 bg-white"><a href="www.instagram.com/blessed_tech.inc/">blessed_tech.inc</button></a>
+            </div>
+
+                        
+            <!-- peaceafrika -->
+            <div class="text-center mb-10">
+                    <h1 class="text-xl md:text-3xl font-bold mb-1">PeaceAfrika</h1>
+                    <p class="text-l text-white max-w-2xl mx-auto">Blessed Tech is an online graphic design brand that helps individuals and businesses create eye-catching designs. From logos to social media posts and branding, They bring your ideas to life with creativity and style.</p>
+            </div>
+            <!-- Gallery: PeaceAfrika-->
+            <div class="gallery mb-5" id="gallery">
+                <!-- Portrait Images -->
+                <div class="gallery-item" data-category="logo">
+                    <img src="/DESIGNS/Peaceafrika logo.jpg" alt="PeaceAfrika logo">
+                    <div class="image-description">PeaceAfrika Logo, Depicting Africa's Dynamism and colors!</div>
+                </div>
+                
+                <!-- Landscape Images -->
+                <div class="gallery-item" data-category="flyer">
+                    <img src="/DESIGNS/PEACEAFRIKA.jpg" alt="Brand Identity Flyer">
+                    <div class="image-description">PeaceAfrika Flyer Design</div>
+                </div>
+                
+                <!-- Square Images -->
+                <div class="gallery-item" data-category="smd">
+                    <img src="/DESIGNS/tgif.jpg" alt="social media design">
+                    <div class="image-description">PeaceAfrika Social Media Design 1</div>
+                </div>
+                
+                <div class="gallery-item" data-category="smd">
+                    <img src="/DESIGNS/ADIRE-THAT-SPEAKS.jpg" alt="social media design">
+                    <div class="image-description">PeaceAfrika Social Media Design 2</div>
+                </div>
+
+                <!-- Various aspect ratios
+                <div class="gallery-item" data-category="photo-manipulation">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/d98c65de-aeab-4587-985d-4c682bbd5a46.png" alt="Tall building architecture">
+                    <div class="image-description">Contemporary architectural design elements</div>
+                </div> -->
+                
+                
+                <!-- <div class="gallery-item" data-category="nature">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/239b9141-e5e1-4516-8be6-c52092335655.png" alt="Ocean waves crashing">
+                    <div class="image-description">Powerful ocean waves in stormy weather</div>
+                </div>
+                
+                <div class="gallery-item" data-category="nature">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/c852e639-f8e2-4fd5-b457-40bb88659252.png" alt="Vertical forest landscape">
+                    <div class="image-description">Lush green forest vertical composition</div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/80e4543f-96dc-4be8-bf43-22bd0d6ebdfb.png" alt="Desert landscape wide">
+                    <div class="image-description">Expansive desert dunes at midday</div>
+                </div> -->
+            </div>
+            <!-- instagram: PeaceAfrika -->
+             <div class= "text-center mb-20">
+                    <h2 class="text-white">Check out Their Instagram:</h2>
+                    <a href="www.instagram.com/blessed_tech.inc/"><button class="text-black mt-2 px-4 py-2 bg-white"><a href="www.instagram.com/blessed_tech.inc/">sisi_aladire</button></a>
+            </div>
+
+            <!-- others -->
+            <div class="text-center mb-10">
+                    <h1 class="text-xl md:text-3xl font-bold mb-1">Extras</h1>
+                    <p class="text-l text-white max-w-2xl mx-auto">I will call these Designs <b>My Extras</b> because it symbolizes my creativity and every work of art I possess, These are a few of them though, I wouldn't showcase everything on here because of some reasons and also the NDA we are meant to sign at times.</p>
+            </div>
+
+            <!-- gallery of extras -->
+            <div class="gallery mb-5" id="gallery">
+                
+                <div class="gallery-item" data-category="flyer">
+                    <img src="/DESIGNS/FUTURES SNACKS.jpg" alt="Future snacks">
+                    <div class="image-description">Brand Identity: Future Kitchen</div>
+                </div>
+                
+                <div class="gallery-item" data-category="smd">
+                    <img src="/DESIGNS/EXPANDING-FINALE.jpg" alt="Social Media Design">
+                    <div class="image-description">Social Media Design: Triple R House of Beauty</div>
+                </div>
+                
+                <div class="gallery-item" data-category="flyer">
+                    <img src="/DESIGNS/OKIS MOBILE WORLD.jpg" alt="Future snacks">
+                    <div class="image-description">Brand Identity: Future Kitchen</div>
+                </div>
+
+                <div class="gallery-item" data-category="smd">
+                    <img src="/DESIGNS/FINISHED.jpg" alt="Social Media Design">
+                    <div class="image-description">Social Media Design: Okis Mobile World | August</div>
+                </div>
+
+                <div class="gallery-item" data-category="smd">
+                    <img src="/DESIGNS/NEW-WEEK.jpg" alt="Social Media Design">
+                    <div class="image-description">Social Media Design: Okis Mobile World | New Week</div>
+                </div>
+
+                <div class="gallery-item" data-category="flyer">
+                    <img src="/DESIGNS/CYBER.jpg" alt="Brand Identity for Cyber">
+                    <div class="image-description">Brand Identity Design: Cyber Boosting</div>
+                </div>
+
+
+
+                <!-- Various aspect ratios
+                <div class="gallery-item" data-category="photo-manipulation">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/d98c65de-aeab-4587-985d-4c682bbd5a46.png" alt="Tall building architecture">
+                    <div class="image-description">Contemporary architectural design elements</div>
+                </div> -->
+                
+                
+                <!-- <div class="gallery-item" data-category="nature">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/239b9141-e5e1-4516-8be6-c52092335655.png" alt="Ocean waves crashing">
+                    <div class="image-description">Powerful ocean waves in stormy weather</div>
+                </div>
+                
+                <div class="gallery-item" data-category="nature">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/c852e639-f8e2-4fd5-b457-40bb88659252.png" alt="Vertical forest landscape">
+                    <div class="image-description">Lush green forest vertical composition</div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/80e4543f-96dc-4be8-bf43-22bd0d6ebdfb.png" alt="Desert landscape wide">
+                    <div class="image-description">Expansive desert dunes at midday</div>
+                </div> -->
+            </div>
+
+            <hr style="margin: 0.5em; margin-bottom: 50px;">
+            <!-- party flyer designs -->
+            <div class="text-center mb-10">
+                    <h1 class="text-xl md:text-3xl font-bold mb-1">Party Flyer Designs</h1>
+                    <!-- <p class="text-l text-white max-w-2xl mx-auto">I will call these Designs <b>My Extras</b> because it symbolizes my creativity and every work of art I possess, These are a few of them though, I wouldn't showcase everything on here because of some reasons and also the NDA we are meant to sign at times.</p> -->
+            </div>
+
+            <!-- Gallery Party -->
+            <div class="gallery mb-5" id="gallery">
+                <div class="gallery-item" data-category="logo">
+                    <img src="/DESIGNS/LAUTECHTAINMENT-2.0.jpg" alt="Party Flyer">
+                    <div class="image-description">Party Flyer: LAUTECHTAINMENT 2.0</div>
+                </div>
+                
+                <!-- Landscape Images -->
+                <div class="gallery-item" data-category="flyer">
+                    <img src="/DESIGNS/AFTER-EXAM-PARTY-white.jpg" alt="Party Flyer">
+                    <div class="image-description">Party Flyer: AFTER EXAM PARTY</div>
+                </div>
+                
+                <!-- Square Images -->
+                <div class="gallery-item" data-category="flyer">
+                    <img src="/DESIGNS/WACKO-ANTICIPATE.jpg" alt="Party Flyer">
+                    <div class="image-description">Party Flyer: Wacko Night!</div>
+                </div>
+
+                <div class="gallery-item" data-category="flyer">
+                    <img src="/DESIGNS/banner 2.jpg" alt="Party Flyer">
+                    <div class="image-description">Party Flyer: No rules Party | Banner Design</div>
+                </div>
+                
+                <div class="gallery-item" data-category="flyer">
+                    <img src="/DESIGNS/no rules party main.jpg" alt="Party Flyer">
+                    <div class="image-description">Party Flyer: No rules Party | Social Media Design</div>
+                </div>
+
+                <div class="gallery-item" data-category="flyer">
+                    <img src="/DESIGNS/young cash.jpg" alt="Party Flyer">
+                    <div class="image-description">Party Flyer: No rules Party | Social Media Promotional design</div>
+                </div>
+
+                <div class="gallery-item" data-category="flyer">
+                    <img src="/DESIGNS/kaytsharp.jpg" alt="Party Flyer">
+                    <div class="image-description">Party Flyer: No rules Party | Social Media Promotional design</div>
+                </div>
+
+                <div class="gallery-item" data-category="flyer">
+                    <img src="/DESIGNS/HAND TICKET VIP.jpg" alt="Party Flyer">
+                    <div class="image-description">Party Flyer: No rules Party | Ticket Design</div>
+                </div>
+            </div>
+
+        </section>
+    </div>
+    
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <span class="lightbox-close" id="lightboxClose">&times;</span>
+        <div class="lightbox-content">
+            <img class="lightbox-img" id="lightboxImage" src="" alt="">
+            <div class="lightbox-description" id="lightboxDescription"></div>
+        </div>
+        <div class="lightbox-nav">
+            <button id="prevBtn">&larr;</button>
+            <button id="nextBtn">&rarr;</button>
+        </div>
+    </div>
+    
+    <script>
+        // Gallery functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const galleryItems = document.querySelectorAll('.gallery-item');
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImage = document.getElementById('lightboxImage');
+            const lightboxDescription = document.getElementById('lightboxDescription');
+            const lightboxClose = document.getElementById('lightboxClose');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            let currentIndex = 0;
+            
+            // Create array of gallery images
+            const galleryImages = Array.from(galleryItems).map(item => ({
+                src: item.querySelector('img').src,
+                alt: item.querySelector('img').alt,
+                description: item.querySelector('.image-description').textContent
+            }));
+            
+            // Open lightbox
+            galleryItems.forEach((item, index) => {
+                item.addEventListener('click', () => {
+                    currentIndex = index;
+                    updateLightbox();
+                    lightbox.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                });
+            });
+            
+            // Close lightbox
+            lightboxClose.addEventListener('click', () => {
+                lightbox.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+            
+            // Previous image
+            prevBtn.addEventListener('click', () => {
+                currentIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
+                updateLightbox();
+            });
+            
+            // Next image
+            nextBtn.addEventListener('click', () => {
+                currentIndex = (currentIndex + 1) % galleryImages.length;
+                updateLightbox();
+            });
+            
+            // Keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (lightbox.classList.contains('active')) {
+                    if (e.key === 'Escape') {
+                        lightbox.classList.remove('active');
+                        document.body.style.overflow = 'auto';
+                    } else if (e.key === 'ArrowLeft') {
+                        currentIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
+                        updateLightbox();
+                    } else if (e.key === 'ArrowRight') {
+                        currentIndex = (currentIndex + 1) % galleryImages.length;
+                        updateLightbox();
+                    }
+                }
+            });
+            
+            // Filter Gallery Items
+            const filterButtons = document.querySelectorAll('.btn');
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    // Set active button
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    const filter = button.dataset.filter;
+                    
+                    galleryItems.forEach(item => {
+                        if (filter === 'all' || item.dataset.category === filter) {
+                            item.style.display = 'block';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                    
+                    // Re-index visible items for lightbox navigation
+                    updateGalleryImagesArray();
+                });
+            });
+            
+            // Update gallery images array based on visible items
+            function updateGalleryImagesArray() {
+                const visibleItems = Array.from(galleryItems).filter(item => 
+                    item.style.display !== 'none'
+                );
+                
+                // Update currentIndex if needed to stay within visible items bounds
+                currentIndex = Math.min(currentIndex, visibleItems.length - 1);
+                
+                galleryImages.length = 0; // Clear array
+                
+                visibleItems.forEach(item => {
+                    galleryImages.push({
+                        src: item.querySelector('img').src,
+                        alt: item.querySelector('img').alt,
+                        description: item.querySelector('.image-description').textContent
+                    });
+                });
+            }
+            
+            // Update lightbox content
+            function updateLightbox() {
+                lightboxImage.src = galleryImages[currentIndex].src;
+                lightboxImage.alt = galleryImages[currentIndex].alt;
+                lightboxDescription.textContent = galleryImages[currentIndex].description;
+            }
+        });
+    </script>
+</body>
+</html>
+
